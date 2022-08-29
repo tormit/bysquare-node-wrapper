@@ -35,7 +35,7 @@ class EncodeTest extends \PHPUnit\Framework\TestCase
             'BankAccounts' => 0
         ];
 
-        $bsq = new \Tormit\BysquareNodeWrapper\BySquare($payment, 300);
+        $bsq = new \Tormit\BysquareNodeWrapper\BySquare($payment, 250);
 
         $this->assertEquals(
             '00078000FSLK6OS1KP0B22NEL9H09QNH4K5FI01JUTOJO2303LOJ4D4V48928DJ1KIOJJQ4QGTGA24GPEHL9HJUL8IH822E6LHKM5HBJ9B7889RL9I91VOFK6V9QS1NH27VE90O0',
