@@ -32,7 +32,7 @@ class BySquare
         $paymentData = json_encode($this->paymentData);
 
         if ($this->debug) {
-            $this->getOutput()->writeln(sprintf('bysquare debug: binary: %d', $this->bysquareBinPath));
+            $this->getOutput()->writeln(sprintf('bysquare debug: binary: %s', $this->bysquareBinPath));
             $this->getOutput()->writeln(sprintf('bysquare debug: size: %d', $this->qrSizePx));
             $this->getOutput()->writeln(sprintf('bysquare debug: data: %s', $paymentData));
         }

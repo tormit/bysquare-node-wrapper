@@ -47,7 +47,7 @@ class EncodeTest extends \PHPUnit\Framework\TestCase
         );
 
         $debugOutput = $bsqOutput->fetch();
-        $this->assertStringContainsString('bysquare debug: binary', $debugOutput);
+        $this->assertStringContainsString('bysquare debug: binary: /usr/bin/bysquare', $debugOutput);
 
         $qrResult = $bsq->renderQr();
 
