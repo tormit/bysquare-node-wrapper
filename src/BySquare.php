@@ -69,7 +69,7 @@ class BySquare
         $qrData = $this->renderQrData();
 
         if ($this->debug) {
-            $this->getOutput()->writeln(sprintf('bysquare debug: size: %d', $this->qrSizePx));
+            $this->getOutput()->writeln(sprintf('bysquare debug: encodedData: %s', $qrData));
         }
         $qrBuilder = \Endroid\QrCode\Builder\Builder
             ::create()
