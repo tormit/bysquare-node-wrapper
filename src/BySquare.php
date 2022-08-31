@@ -110,7 +110,7 @@ class BySquare
         imagecopy($resizedCanvasQr, $qrImage, 0, 0, 0, 0, $qrBaseWidth, $qrBaseHeight);
 
         // Add logo
-        $bottomOffsetP = 5;
+        $bottomOffsetP = 4;
         $rightOffsetP = 2;
 
         $dstX = $qrBaseWidth * (1 - $rightOffsetP / 100) - $logoImageData->getWidth();
