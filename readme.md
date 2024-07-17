@@ -1,6 +1,7 @@
 # General
 
-....
+PHP library to generate "PAY by square" QR code.
+Uses https://www.npmjs.com/package/bysquare to encode data according to "PAY by square" specification and render QR with [endroid/qr-code](https://github.com/endroid/qr-code) package.
 
 # Known issues
 
