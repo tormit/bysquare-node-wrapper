@@ -31,22 +31,33 @@ class BySquare
     {
         $paymentData = json_encode($this->paymentData);
 
+        // Create a temporary file
+        $tempFile = tempnam(sys_get_temp_dir(), 'payment_data_');
+        $tempFilePath = $tempFile . '.json';
+        rename($tempFile, $tempFilePath);
+
+        // Write payment data to the temporary file
+        file_put_contents($tempFilePath, $paymentData);
+
         if ($this->debug) {
             $this->getOutput()->writeln(sprintf('bysquare debug: binary: %s', $this->bysquareBinPath));
             $this->getOutput()->writeln(sprintf('bysquare debug: size: %d', $this->qrSizePx));
             $this->getOutput()->writeln(sprintf('bysquare debug: data: %s', $paymentData));
         }
 
-        $cmd = new \Symfony\Component\Process\Process([$this->bysquareBinPath], null, null, $paymentData);
         try {
-            $cmd->mustRun();
-        } catch (\Symfony\Component\Process\Exception\ProcessFailedException $e) {
-            $this->getOutput()->writeln(sprintf('bysquare error: %s', $e->getProcess()->getErrorOutput()));
+            $output = shell_exec($this->bysquareBinPath . ' --encode ' . escapeshellarg($tempFilePath) . ' 2>&1');
+            if ($output === null || str_contains($output, 'file') || str_contains($output, 'Error')) {
+                throw new \RuntimeException(sprintf('Command execution failed: %s', $output));
+            }
+            $this->getOutput()->writeln('Raw output: ' . $output);
+        } catch (\Exception $e) {
+            $this->getOutput()->writeln(sprintf('bysquare error: %s', $e->getMessage()));
             throw $e;
+        } finally {
+            // Clean up the temporary file
+            unlink($tempFilePath);
         }
-
-
-        $output = trim($cmd->getOutput());
 
         if (!$output) {
             throw new BySquareException('No output from bysquare command');
