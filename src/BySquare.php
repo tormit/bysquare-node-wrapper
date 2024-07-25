@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
+
 /**
  * @author Tormi Talv <tormi.talv@sportlyzer.com> 2022
  * @since 2022-08-26 12:47:14
+ * @since 2024-07-20 bySquare 2.x support
  * @version 1.0
  */
 
@@ -39,11 +41,11 @@ class BySquare
         // Write payment data to the temporary file
         file_put_contents($tempFilePath, $paymentData);
 
-        $descriptorspec = array(
-            0 => array("pty"),              // PTY for stdin
-            1 => array("pty"),              // PTY for stdout
-            2 => array("pty")               // PTY for stderr
-        );
+        $descriptorspec = [
+            0 => ['pty'],              // PTY for stdin
+            1 => ['pty'],              // PTY for stdout
+            2 => ['pty']               // PTY for stderr
+        ];
 
         if ($this->debug) {
             $this->getOutput()->writeln(sprintf('bysquare debug: binary: %s', $this->bysquareBinPath));
@@ -63,14 +65,18 @@ class BySquare
                 throw new \RuntimeException('Process not open');
             }
 
-            $output = stream_get_contents($pipes[1]);  // Read from the PTY stdout
+            $output = @stream_get_contents($pipes[1]);  // Read from the PTY stdout
             fclose($pipes[0]);  // Close stdin PTY
             fclose($pipes[1]);  // Close stdout PTY
             fclose($pipes[2]);  // Close stderr PTY
-            proc_close($process);
+            $exitCode = proc_close($process);
 
             if (!$output) {
                 throw new \RuntimeException('Command execution failed: No output');
+            }
+
+            if ($exitCode !== 0) {
+                throw new \RuntimeException(sprintf('Command execution failed with exit code %s', $exitCode));
             }
 
             if (str_contains($output, 'file') || str_contains($output, 'Error')) {
