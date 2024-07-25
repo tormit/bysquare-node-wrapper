@@ -39,6 +39,12 @@ class BySquare
         // Write payment data to the temporary file
         file_put_contents($tempFilePath, $paymentData);
 
+        $descriptorspec = array(
+            0 => array("pty"),              // PTY for stdin
+            1 => array("pty"),              // PTY for stdout
+            2 => array("pty")               // PTY for stderr
+        );
+
         if ($this->debug) {
             $this->getOutput()->writeln(sprintf('bysquare debug: binary: %s', $this->bysquareBinPath));
             $this->getOutput()->writeln(sprintf('bysquare debug: size: %d', $this->qrSizePx));
@@ -46,8 +52,28 @@ class BySquare
         }
 
         try {
-            $output = shell_exec($this->bysquareBinPath . ' --encode ' . escapeshellarg($tempFilePath) . ' 2>&1');
-            if ($output === null || str_contains($output, 'file') || str_contains($output, 'Error')) {
+            $command = $this->bysquareBinPath . ' --encode ' . escapeshellarg($tempFilePath) . ' 2>&1';
+            $process = proc_open(
+                $command,
+                $descriptorspec,
+                $pipes
+            );
+
+            if (!is_resource($process)) {
+                throw new \RuntimeException('Process not open');
+            }
+
+            $output = stream_get_contents($pipes[1]);  // Read from the PTY stdout
+            fclose($pipes[0]);  // Close stdin PTY
+            fclose($pipes[1]);  // Close stdout PTY
+            fclose($pipes[2]);  // Close stderr PTY
+            proc_close($process);
+
+            if (!$output) {
+                throw new \RuntimeException('Command execution failed: No output');
+            }
+
+            if (str_contains($output, 'file') || str_contains($output, 'Error')) {
                 throw new \RuntimeException(sprintf('Command execution failed: %s', $output));
             }
             $this->getOutput()->writeln('Raw output: ' . $output);
@@ -57,10 +83,6 @@ class BySquare
         } finally {
             // Clean up the temporary file
             unlink($tempFilePath);
-        }
-
-        if (!$output) {
-            throw new BySquareException('No output from bysquare command');
         }
 
         return $output;

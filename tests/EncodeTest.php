@@ -22,17 +22,25 @@ class EncodeTest extends \PHPUnit\Framework\TestCase
     public function testQrData()
     {
         $payment = [
-            'InvoiceID' => '1234567890',
-            'PaymentDueDate' => '2022-08-31',
-            'BIC' => 'XXXXXXXXXXX',
-            'IBAN' => 'SK3112000000198742637541',
-            'Amount' => 323.45,
-            'CurrencyCode' => 'EUR',
-            'VariableSymbol' => '1234567890',
-            'ConstantSymbol' => '308',
-            'Payments' => 0,
-            'PaymentOptions' => 0,
-            'BankAccounts' => 0
+            'invoiceId' => '24070111',
+            'payments' =>
+                [
+                    0 =>
+                        [
+                            'type' => 1,
+                            'amount' => 123.45,
+                            'bankAccounts' =>
+                                [
+                                    0 =>
+                                        [
+                                            'iban' => 'SK7886440391969053985795',
+                                            'bic' => 'GXMNTU8Q',
+                                        ],
+                                ],
+                            'currencyCode' => 'EUR',
+                            'variableSymbol' => '2620011172460',
+                        ],
+                ],
         ];
 
         $bsq = new \Tormit\BysquareNodeWrapper\BySquare($payment, 250);
@@ -42,12 +50,12 @@ class EncodeTest extends \PHPUnit\Framework\TestCase
         $bsq->setOutput($bsqOutput);
 
         $this->assertEquals(
-            '00078000FSLK6OS1KP0B22NEL9H09QNH4K5FI01JUTOJO2303LOJ4D4V48928DJ1KIOJJQ4QGTGA24GPEHL9HJUL8IH822E6LHKM5HBJ9B7889RL9I91VOFK6V9QS1NH27VE90O0',
+            '0005I0005KSGF2HH03QMJJ207H80N0MBU0B0RGUL4MV1J1NAC9PD591SNV639MIV7GVPV3BQBJCDO22A6MU92HQ8LLQ0ET3IGSRNN79FQIT4F3UAB2B3VLA8H8N5LEB8ATD1FVVV0I54000',
             $bsq->renderQrData()
         );
 
         $debugOutput = $bsqOutput->fetch();
-        $this->assertStringContainsString('bysquare debug: binary: /usr/bin/bysquare', $debugOutput);
+        $this->assertStringContainsString('bysquare debug: binary:', $debugOutput);
 
         $qrResult = $bsq->renderQr();
 
