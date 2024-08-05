@@ -41,12 +41,6 @@ class BySquare
         // Write payment data to the temporary file
         file_put_contents($tempFilePath, $paymentData);
 
-        $descriptorspec = [
-            0 => ['pty'],              // PTY for stdin
-            1 => ['pty'],              // PTY for stdout
-            2 => ['pty']               // PTY for stderr
-        ];
-
         if ($this->debug) {
             $this->getOutput()->writeln(sprintf('bysquare debug: binary: %s', $this->bysquareBinPath));
             $this->getOutput()->writeln(sprintf('bysquare debug: size: %d', $this->qrSizePx));
@@ -55,34 +49,7 @@ class BySquare
 
         try {
             $command = $this->bysquareBinPath . ' --encode ' . escapeshellarg($tempFilePath) . ' 2>&1';
-            $process = proc_open(
-                $command,
-                $descriptorspec,
-                $pipes
-            );
-
-            if (!is_resource($process)) {
-                throw new \RuntimeException('Process not open');
-            }
-
-            $output = @stream_get_contents($pipes[1]);  // Read from the PTY stdout
-            fclose($pipes[0]);  // Close stdin PTY
-            fclose($pipes[1]);  // Close stdout PTY
-            fclose($pipes[2]);  // Close stderr PTY
-            $exitCode = proc_close($process);
-
-            if (!$output) {
-                throw new \RuntimeException('Command execution failed: No output');
-            }
-
-            if ($exitCode !== 0) {
-                throw new \RuntimeException(sprintf('Command execution failed with exit code %s', $exitCode));
-            }
-
-            if (str_contains($output, 'file') || str_contains($output, 'Error')) {
-                throw new \RuntimeException(sprintf('Command execution failed: %s', $output));
-            }
-            $this->getOutput()->writeln('Raw output: ' . $output);
+            $output = $this->runCommand($command);
         } catch (\Exception $e) {
             $this->getOutput()->writeln(sprintf('bysquare error: %s', $e->getMessage()));
             throw $e;
@@ -172,6 +139,14 @@ class BySquare
         return new \Endroid\QrCode\Writer\Result\PngResult($resizedCanvasQr);
     }
 
+    public function decodeQrData(string $qrString): array
+    {
+        $command = $this->bysquareBinPath . ' --decode ' . escapeshellarg($qrString) . ' 2>&1';
+        $output = $this->runCommand($command);
+
+        return json_decode($output, true);
+    }
+
     /**
      * @param string $bysquareBinPath
      * @return static
@@ -208,5 +183,45 @@ class BySquare
         $this->debug = $debug;
 
         return $this;
+    }
+
+    public function getDescriptorspec(): array
+    {
+        return [
+            0 => ['pty'],              // PTY for stdin
+            1 => ['pty'],              // PTY for stdout
+            2 => ['pty']               // PTY for stderr
+        ];
+    }
+
+    public function runCommand(string $command): string
+    {
+        $process = proc_open(
+            $command,
+            $this->getDescriptorspec(),
+            $pipes
+        );
+
+        if (!is_resource($process)) {
+            throw new \RuntimeException('Process not open');
+        }
+
+        $output = @stream_get_contents($pipes[1]);  // Read from the PTY stdout
+        fclose($pipes[0]);  // Close stdin PTY
+        fclose($pipes[1]);  // Close stdout PTY
+        fclose($pipes[2]);  // Close stderr PTY
+        $exitCode = proc_close($process);
+
+        if (!$output) {
+            throw new \RuntimeException('Command execution failed: No output');
+        }
+
+        if ($exitCode !== 0 || str_contains($output, 'file') || str_contains($output, 'Error')) {
+            throw new \RuntimeException(sprintf('Command execution failed(%d): %s', $exitCode, $output));
+        }
+
+        $this->getOutput()->writeln('Raw output: ' . $output);
+
+        return trim($output);
     }
 }
