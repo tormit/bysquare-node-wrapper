@@ -15,9 +15,9 @@
     "ext-gd": "*",
     "ext-json": "*",
     "composer/composer": "^2.0.0",
-    "endroid/qr-code": "~4.5.2",
-    "symfony/console": "^5.1 || ^6.0",
-    "symfony/filesystem": "^5.1 || ^6.0"
+    "endroid/qr-code": "^4.5 || ^5.0",
+    "symfony/console": "^5.1 || ^6.0 || ^7.0",
+    "symfony/filesystem": "^5.1 || ^6.0 || ^7.0"
   },
   "require-dev": {
     "ergebnis/composer-normalize": "^2.28",
